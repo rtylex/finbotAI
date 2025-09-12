@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: finansal-okuryazarlik-chatbot
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: >
+      gunicorn app:app
+      --bind 0.0.0.0:$PORT
+      --workers 1
+      --threads 8
+      --timeout 120
+      --graceful-timeout 30
+      --keep-alive 30
+      --log-level info
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: MODEL_ID
+        sync: false
+      - key: OPENAI_PROJECT
+        sync: false
+      - key: OPENAI_ORG_ID
+        sync: false
