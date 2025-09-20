@@ -36,9 +36,10 @@
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         background: var(--bg-light);
         color: var(--text-light);
-        min-height: 100vh;
-        overflow-x: hidden;
-        overflow-y: auto;
+        min-height: var(--app-height, 100vh);
+        height: var(--app-height, 100vh);
+        overflow: hidden;
+        overscroll-behavior: contain;
         transition: background-color 0.3s ease, color 0.3s ease;
       }
       
@@ -50,7 +51,7 @@
       .app-container {
         display: flex;
         flex-direction: column;
-        min-height: 100vh;
+        min-height: var(--app-height, 100vh);
         height: var(--app-height, 100vh);
       }
       
@@ -106,10 +107,12 @@
       }
       
       .chat-container {
-        flex: 1;
+        flex: 1 1 auto;
         overflow-y: auto;
         padding: 2rem;
+        padding-bottom: calc(2rem + 6rem + var(--safe-area-bottom));
         background: var(--bg-light);
+        scroll-padding-bottom: calc(6rem + var(--safe-area-bottom));
         transition: background-color 0.3s ease;
       }
       
@@ -206,6 +209,7 @@
         padding: 1rem 2rem;
         padding-bottom: calc(1rem + var(--safe-area-bottom));
         transition: all 0.3s ease;
+        flex-shrink: 0;
       }
       
       body.dark-theme .input-container {
@@ -292,6 +296,7 @@
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: thin;
+        flex-shrink: 0;
       }
       
       .suggestions::-webkit-scrollbar {
@@ -417,6 +422,7 @@
         
         .chat-container {
           padding: 1rem 0.75rem;
+          padding-bottom: calc(1rem + 5rem + var(--safe-area-bottom));
         }
         
         .input-container {
@@ -500,6 +506,7 @@
         
         .chat-container {
           padding: 0.75rem 0.5rem;
+          padding-bottom: calc(0.75rem + 5rem + var(--safe-area-bottom));
         }
         
         .input-container {
@@ -842,20 +849,31 @@
 
         // Adjust viewport height for mobile browsers
         function setViewportHeight() {
-          const vh = window.innerHeight * 0.01;
+          const viewport = window.visualViewport;
+          const height = viewport ? viewport.height : window.innerHeight;
+          const vh = height * 0.01;
           document.documentElement.style.setProperty('--vh', `${vh}px`);
-          document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+          document.documentElement.style.setProperty('--app-height', `${height}px`);
         }
         
         setViewportHeight();
         window.addEventListener('resize', setViewportHeight);
         window.addEventListener('orientationchange', setViewportHeight);
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', setViewportHeight);
+          window.visualViewport.addEventListener('scroll', setViewportHeight);
+        }
 
         // Handle mobile keyboard
         messageInput.addEventListener('focus', () => {
+          setViewportHeight();
           setTimeout(() => {
             chatContainer.scrollTop = chatContainer.scrollHeight;
           }, 300);
+        });
+
+        messageInput.addEventListener('blur', () => {
+          setTimeout(setViewportHeight, 100);
         });
 
         // Improved touch scrolling
